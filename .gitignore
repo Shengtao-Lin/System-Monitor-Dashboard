@@ -1,0 +1,27 @@
+# .NET build outputs
+**/bin/
+**/obj/
+**/publish/
+dist/
+.git-initialization-backup/
+
+# Runtime logs and generated data
+icue_logs/
+*.log
+*.csv
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
+
+# IDE and user-specific files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440, height=2560, initial-scale=1.0" />
+  <title>System Monitor HUD</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="scanline"></div>
+
+  <main class="dashboard">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">THERMAL CORE // ITX-4090</div>
+        <div class="title">SYSTEM MONITOR</div>
+      </div>
+      <div class="timebox">
+        <div id="time" class="time">--:--</div>
+        <div id="date" class="date">----</div>
+      </div>
+    </header>
+
+    <section class="status-row">
+      <div id="serverStatus" class="status-pill offline">SERVER OFFLINE</div>
+      <div id="updatedAt" class="updated">Waiting for data...</div>
+    </section>
+
+    <section class="hero-grid">
+      <article class="card major" id="cpuCard">
+        <div class="card-header">
+          <span>CPU CORE</span>
+          <span class="chip">7800X3D</span>
+        </div>
+        <div class="big-metric">
+          <span id="cpuTemp">--</span><span class="unit">°C</span>
+        </div>
+        <div class="metric-grid">
+          <div><label>LOAD</label><strong id="cpuLoad">--%</strong></div>
+          <div><label>POWER</label><strong id="cpuPower">--W</strong></div>
+          <div><label>CLOCK</label><strong id="cpuClock">--GHz</strong></div>
+          <div><label>CCD1</label><strong id="cpuCcd">--°C</strong></div>
+        </div>
+      </article>
+
+      <article class="card major" id="gpuCard">
+        <div class="card-header">
+          <span>GPU CORE</span>
+          <span class="chip">RTX 4090</span>
+        </div>
+        <div class="big-metric">
+          <span id="gpuTemp">--</span><span class="unit">°C</span>
+        </div>
+        <div class="metric-grid">
+          <div><label>HOTSPOT</label><strong id="gpuHotspot">--°C</strong></div>
+          <div><label>MEM TEMP</label><strong id="gpuMemTemp">--°C</strong></div>
+          <div><label>LOAD</label><strong id="gpuLoad">--%</strong></div>
+          <div><label>POWER</label><strong id="gpuPower">--W</strong></div>
+        </div>
+        <div class="bar-block">
+          <div class="bar-label">
+            <span>VRAM</span>
+            <span id="vramText">-- / -- GB</span>
+          </div>
+          <div class="bar"><div id="vramBar" class="bar-fill"></div></div>
+        </div>
+        <div class="fan-line" id="gpuFan">GPU FANS: -- RPM / -- RPM</div>
+      </article>
+    </section>
+
+    <section class="mid-grid">
+      <article class="card" id="ramCard">
+        <div class="card-header">
+          <span>MEMORY</span>
+          <span class="chip">DDR5</span>
+        </div>
+        <div class="big-metric small">
+          <span id="ramUsed">--</span><span class="unit">GB</span>
+        </div>
+        <div class="bar-block">
+          <div class="bar-label">
+            <span>RAM LOAD</span>
+            <span id="ramText">--%</span>
+          </div>
+          <div class="bar"><div id="ramBar" class="bar-fill"></div></div>
+        </div>
+        <div class="metric-grid two">
+          <div><label>TOTAL</label><strong id="ramTotal">--GB</strong></div>
+          <div><label>DIMM #0</label><strong id="dimm0">--°C</strong></div>
+          <div><label>AVAILABLE</label><strong id="ramAvailable">--GB</strong></div>
+          <div><label>DIMM #2</label><strong id="dimm2">--°C</strong></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <span>NETWORK</span>
+          <span class="chip" id="networkName">--</span>
+        </div>
+        <div class="network-grid">
+          <div>
+            <label>UPLOAD</label>
+            <strong id="netUp">--</strong>
+          </div>
+          <div>
+            <label>DOWNLOAD</label>
+            <strong id="netDown">--</strong>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="card wide">
+      <div class="card-header">
+        <span>BOARD THERMAL ARRAY</span>
+        <span class="chip">GIGABYTE B650I</span>
+      </div>
+      <div id="boardTemps" class="sensor-list"></div>
+      <div class="subsection-title">BOARD FANS</div>
+      <div id="boardFans" class="sensor-list fans"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="card-header">
+        <span>STORAGE BAY</span>
+        <span class="chip">WD_BLACK SN850X</span>
+      </div>
+      <div id="storageList" class="storage-list"></div>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

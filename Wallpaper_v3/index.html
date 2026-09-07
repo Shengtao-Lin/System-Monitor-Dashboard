@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440, height=2560, initial-scale=1.0" />
+  <title>Tactical Thermal Core</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <div class="ambient"></div>
+  <div class="grid-layer"></div>
+  <div class="scanline"></div>
+  <div class="corner-frame"></div>
+
+  <main class="hud">
+    <section class="system-bus">
+      <div class="bus-left">
+        <span class="bus-label">TACTICAL BUS</span>
+        <span class="bus-line"></span>
+      </div>
+
+      <div class="bus-center">
+        <span id="serverStatus" class="status-pill offline">OFFLINE</span>
+        <span id="updatedAt" class="telemetry-text">Waiting for telemetry stream...</span>
+      </div>
+
+      <div class="bus-right">
+        <span class="bus-line reverse"></span>
+        <span class="bus-label">LOCAL TELEMETRY</span>
+      </div>
+    </section>
+
+    <section class="radial-stack">
+      <section class="top-pair">
+        <article class="module cpu-module source-node">
+          <div class="module-top">
+            <div class="module-title-row">
+              <span class="module-kana">PROCESSOR</span>
+              <span class="module-title">CPU CORE</span>
+            </div>
+            <div class="section-code">AMD RYZEN 7800X3D</div>
+          </div>
+
+          <div class="thermal-readout">
+            <span id="cpuTemp" class="temp-value">--</span>
+            <span class="degree">deg C</span>
+          </div>
+
+          <div class="metric-grid">
+            <div><label>LOAD</label><strong id="cpuLoad">--%</strong></div>
+            <div><label>POWER</label><strong id="cpuPower">--W</strong></div>
+            <div><label>CLOCK</label><strong id="cpuClock">--GHz</strong></div>
+            <div><label>CCD1</label><strong id="cpuCcd">-- deg C</strong></div>
+          </div>
+
+          <div class="status-strip cpu-status-strip">
+            CPU COOLING: <span class="passive">SENSOR SAFE MODE</span>
+          </div>
+
+          <div class="trend-stack">
+            <div class="subchart">
+              <div class="subchart-head">
+                <span>TEMP TREND</span>
+                <span id="cpuTempScale">-- deg C</span>
+              </div>
+              <canvas id="cpuTempChart" class="mini-chart" width="620" height="58"></canvas>
+            </div>
+
+            <div class="subchart">
+              <div class="subchart-head">
+                <span>LOAD TREND</span>
+                <span id="cpuLoadScale">--%</span>
+              </div>
+              <canvas id="cpuLoadChart" class="mini-chart" width="620" height="58"></canvas>
+            </div>
+          </div>
+        </article>
+
+        <article class="module gpu-module source-node">
+          <div class="module-top">
+            <div class="module-title-row">
+              <span class="module-kana">GRAPHICS</span>
+              <span class="module-title">GPU CORE</span>
+            </div>
+            <div class="section-code">NVIDIA RTX 4090</div>
+          </div>
+
+          <div class="thermal-readout">
+            <span id="gpuTemp" class="temp-value">--</span>
+            <span class="degree">deg C</span>
+          </div>
+
+          <div class="metric-grid">
+            <div><label>HOTSPOT</label><strong id="gpuHotspot">-- deg C</strong></div>
+            <div><label>VRAM TEMP</label><strong id="gpuMemTemp">-- deg C</strong></div>
+            <div><label>LOAD</label><strong id="gpuLoad">--%</strong></div>
+            <div><label>POWER</label><strong id="gpuPower">--W</strong></div>
+          </div>
+
+          <div class="bar-zone gpu-vram-zone">
+            <div class="bar-head">
+              <span>VRAM MEMORY</span>
+              <span id="vramText">-- / -- GB</span>
+            </div>
+            <div class="hud-bar">
+              <div id="vramBar" class="hud-bar-fill gpu-fill"></div>
+            </div>
+          </div>
+
+          <div id="gpuFan" class="status-strip">GPU FANS: --</div>
+
+          <div class="trend-stack gpu-chart-stack">
+            <div class="subchart">
+              <div class="subchart-head">
+                <span>TEMP TREND</span>
+                <span id="gpuTempScale">-- deg C</span>
+              </div>
+              <canvas id="gpuTempChart" class="mini-chart" width="620" height="58"></canvas>
+            </div>
+
+            <div class="subchart">
+              <div class="subchart-head">
+                <span>LOAD TREND</span>
+                <span id="gpuLoadScale">--%</span>
+              </div>
+              <canvas id="gpuLoadChart" class="mini-chart" width="620" height="58"></canvas>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="core-row">
+        <article class="module hub-module core-node">
+          <div class="hub-title-area">
+            <div class="module-kana">SYSTEM OBSERVATION CORE</div>
+            <h1>THERMAL CORE</h1>
+            <div class="hub-subtitle">CPU / GPU / RAM LOAD MATRIX</div>
+          </div>
+
+          <div class="hub-orbit">
+            <div class="outer-ticks"></div>
+
+            <div class="ring ring-cpu" id="ringCpu">
+              <div class="ring ring-gpu" id="ringGpu">
+                <div class="ring ring-ram" id="ringRam">
+                  <div class="hub-center">
+                    <div id="hubAvg" class="hub-avg">--%</div>
+                    <div class="hub-label">AVG LOAD</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ring-callout callout-cpu"><span>CPU LOAD</span><strong id="hubCpuLoad">--%</strong></div>
+            <div class="ring-callout callout-gpu"><span>GPU LOAD</span><strong id="hubGpuLoad">--%</strong></div>
+            <div class="ring-callout callout-ram"><span>RAM LOAD</span><strong id="hubRamLoad">--%</strong></div>
+            <div class="ring-callout callout-net"><span>NET FLOW</span><strong id="hubNetFlow">--</strong></div>
+            <div class="ring-callout callout-vram"><span>VRAM USED</span><strong id="hubVram">--GB</strong></div>
+            <div class="ring-callout callout-link"><span>ACTIVE LINK</span><strong id="hubNetwork">--</strong></div>
+          </div>
+
+          <div class="ring-legend">
+            <div><span class="legend-dot cpu-dot"></span>CPU LOAD</div>
+            <div><span class="legend-dot gpu-dot"></span>GPU LOAD</div>
+            <div><span class="legend-dot ram-dot"></span>RAM LOAD</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="bottom-pair">
+        <article class="module memory-module sink-node">
+          <div class="module-top compact">
+            <div class="module-title-row">
+              <span class="module-kana">MEMORY BANK</span>
+              <span class="module-title">MEMORY</span>
+            </div>
+            <div class="section-code">G.SKILL TRIDENT Z5</div>
+          </div>
+
+          <div class="memory-main">
+            <span id="ramUsed">--</span>
+            <span class="slash">/</span>
+            <span id="ramTotal">--</span>
+            <small>GB</small>
+          </div>
+
+          <div class="bar-zone">
+            <div class="bar-head">
+              <span>RAM LOAD</span>
+              <span id="ramText">--%</span>
+            </div>
+            <div class="hud-bar">
+              <div id="ramBar" class="hud-bar-fill ram-fill"></div>
+            </div>
+          </div>
+
+          <div class="mini-row">
+            <div><label>AVAILABLE</label><strong id="ramAvailable">--GB</strong></div>
+            <div><label>DIMM #0</label><strong id="dimm0">-- deg C</strong></div>
+            <div><label>DIMM #2</label><strong id="dimm2">-- deg C</strong></div>
+          </div>
+        </article>
+
+        <article class="module network-module sink-node">
+          <div class="module-top compact">
+            <div class="module-title-row">
+              <span class="module-kana">DATA LINK</span>
+              <span class="module-title">NETWORK</span>
+            </div>
+            <div class="section-code">ACTIVE ADAPTER</div>
+          </div>
+
+          <div class="network-name" id="networkName">--</div>
+
+          <div class="net-duo">
+            <div><label>UPLOAD</label><strong id="netUp">--</strong></div>
+            <div><label>DOWNLOAD</label><strong id="netDown">--</strong></div>
+          </div>
+
+          <div class="chart-panel network-chart-panel">
+            <div class="chart-head">
+              <span>NETWORK FLOW</span>
+              <span>UP / DOWN</span>
+            </div>
+            <canvas id="netChart" class="mini-chart" width="620" height="64"></canvas>
+          </div>
+        </article>
+      </section>
+    </section>
+
+    <section class="module ops-strip axial-module">
+      <div class="ops-item">
+        <span>SENSOR POLICY</span>
+        <strong>SAFE MODE</strong>
+      </div>
+      <div class="ops-item">
+        <span>AUX USB POLLING</span>
+        <strong>DISARMED</strong>
+      </div>
+      <div class="ops-item">
+        <span>TELEMETRY SOURCE</span>
+        <strong>LOCAL ONLY</strong>
+      </div>
+      <div class="ops-item">
+        <span>WALLPAPER PROFILE</span>
+        <strong>TACTICAL V3</strong>
+      </div>
+    </section>
+
+    <section class="module board-module axial-module">
+      <div class="section-head">
+        <div class="module-title-row">
+          <span class="module-kana">MOTHERBOARD</span>
+          <span class="module-title">BOARD THERMAL ARRAY</span>
+        </div>
+        <div class="section-code">GIGABYTE B650I</div>
+      </div>
+
+      <div id="boardTemps" class="board-grid"></div>
+
+      <div class="fan-head">BOARD FAN CHANNEL</div>
+      <div id="boardFans" class="fan-grid"></div>
+    </section>
+
+    <section class="module storage-module axial-module">
+      <div class="section-head">
+        <div class="module-title-row">
+          <span class="module-kana">NVME BAY</span>
+          <span class="module-title">STORAGE MODULE BAY</span>
+        </div>
+        <div class="section-code">WD_BLACK SN850X ARRAY</div>
+      </div>
+
+      <div id="storageList" class="drive-grid"></div>
+    </section>
+
+    <footer class="hud-footer">
+      <span>SENSOR SAFE MODE</span>
+      <span>THERMAL BUS CONNECTED</span>
+      <span>LOCAL TELEMETRY STREAM</span>
+    </footer>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
