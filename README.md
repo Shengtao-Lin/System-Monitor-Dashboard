@@ -1,94 +1,99 @@
 # System Monitor Dashboard
 
-一个面向 Windows 与 Wallpaper Engine 的本地硬件监控仪表盘。它通过轻量级 .NET 服务读取硬件传感器，再由纯 HTML/CSS/JavaScript 前端实时展示 CPU、GPU、内存、网络、主板、硬盘与可选的 Corsair 水冷数据。
+A local hardware-monitoring dashboard for Windows and Wallpaper Engine. A lightweight .NET service reads system sensors, while a dependency-free HTML, CSS, and JavaScript frontend displays real-time CPU, GPU, memory, network, motherboard, storage, and optional Corsair cooler data.
 
-> 数据只在本机采集和展示。服务默认仅监听 `127.0.0.1:8765`，不会向局域网或互联网开放。
+> [!NOTE]
+> All data is collected and displayed locally. The server listens only on `127.0.0.1:8765` by default and is not exposed to your network or the internet.
 
-## 功能
+## Features
 
-- CPU：温度、负载、功耗、频率与 CCD 温度
-- GPU：核心/热点/显存温度、负载、功耗、显存占用与风扇转速
-- 内存：已用、可用、总容量、负载与 DIMM 温度
-- 网络：活动网卡、实时上传与下载速率
-- 主板：温度与风扇传感器
-- 存储：容量、占用、温度与健康度
-- Corsair iCUE 水冷：冷却液温度、风扇和水泵数据（可选）
-- 三代仪表盘界面，`Wallpaper_v3` 为当前版本
-- Windows 托盘控制：启动、停止、重启、健康检查、日志和开机启动
+- CPU temperature, load, power, clock speed, and CCD temperature
+- GPU core, hotspot, and memory temperatures; load, power, VRAM usage, and fan speed
+- Memory usage, capacity, load, and DIMM temperatures
+- Active network adapter with live upload and download rates
+- Motherboard temperature and fan sensors
+- Storage capacity, usage, temperature, and health
+- Optional Corsair iCUE liquid temperature, fan, and pump telemetry
+- Three dashboard generations, with `Wallpaper_v3` as the current version
+- Windows system tray controls for start, stop, restart, health checks, logs, and startup
 
-## 项目结构
-
-```text
-System_Monitor_Dashboard/
-├─ MonitorServer/       # ASP.NET Core 本地硬件数据服务
-├─ MonitorServer_V2/    # Windows 托盘管理程序
-├─ Wallpaper_v1/        # 第一版界面
-├─ Wallpaper_v2/        # 第二版界面
-├─ Wallpaper_v3/        # 当前版界面
-└─ start-monitor-server.bat
-```
+## Architecture
 
 ```mermaid
 flowchart LR
-    Sensors[Windows hardware sensors] --> Server[MonitorServer<br/>127.0.0.1:8765]
-    ICUE[iCUE sensor CSV logs] -. optional .-> Server
-    Server --> API[/health · /stats · /cooler]
-    API --> Dashboard[Wallpaper Engine dashboard]
-    Tray[MonitorServer_V2 tray app] --> Server
+    Sensors["Windows hardware sensors"] --> Server["MonitorServer<br/>127.0.0.1:8765"]
+    ICUE["iCUE sensor CSV logs"] -.-> Server
+    Server --> API["/health<br/>/stats<br/>/cooler"]
+    API --> Dashboard["Wallpaper Engine dashboard"]
+    Tray["MonitorServer_V2 tray app"] --> Server
 ```
 
-## 环境要求
+## Repository Structure
 
-- Windows 10/11
+```text
+System_Monitor_Dashboard/
+|-- MonitorServer/       # ASP.NET Core hardware data service
+|-- MonitorServer_V2/    # Windows system tray controller
+|-- Wallpaper_v1/        # First dashboard design
+|-- Wallpaper_v2/        # Second dashboard design
+|-- Wallpaper_v3/        # Current dashboard design
+`-- start-monitor-server.bat
+```
+
+## Requirements
+
+- Windows 10 or Windows 11
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Wallpaper Engine](https://www.wallpaperengine.io/)（仅将界面用作动态壁纸时需要）
-- Corsair iCUE（仅水冷监控需要）
+- [Wallpaper Engine](https://www.wallpaperengine.io/) if the dashboard will be used as a wallpaper
+- Corsair iCUE only if cooler telemetry is required
 
-部分硬件传感器可能需要管理员权限才能读取。不同硬件暴露的传感器名称和数量也会有所差异。
+Some hardware sensors may require administrator privileges. Available sensor names and values vary by device, driver, and motherboard implementation.
 
-## 从源码运行
+## Quick Start
 
-克隆仓库后，先从模板创建本机配置：
+Clone the repository and create your local configuration file:
 
 ```powershell
+git clone https://github.com/Shengtao-Lin/System-Monitor-Dashboard.git
+Set-Location System-Monitor-Dashboard
 Copy-Item .env.example .env
 ```
 
-按需编辑 `.env`，然后在仓库根目录执行：
+Edit `.env` if needed, then start the server:
 
 ```powershell
 dotnet restore .\MonitorServer\MonitorServer.csproj
 dotnet run --project .\MonitorServer\MonitorServer.csproj
 ```
 
-确认服务状态：
+Check the server health:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8765/health
 ```
 
-可用接口：
+The following local endpoints are available:
 
-| 地址 | 用途 |
+| Endpoint | Purpose |
 | --- | --- |
-| `GET /health` | 服务健康状态 |
-| `GET /stats` | 主要硬件传感器数据 |
-| `GET /cooler` | 缓存后的 iCUE 水冷数据 |
+| `GET /health` | Reports server health |
+| `GET /stats` | Returns primary hardware sensor data |
+| `GET /cooler` | Returns cached iCUE cooler data |
 
-直接在浏览器打开 `Wallpaper_v3/index.html` 即可预览当前仪表盘；服务离线时页面会显示 `OFFLINE`。
+Open `Wallpaper_v3/index.html` in a browser to preview the current dashboard. It displays `OFFLINE` whenever the local service cannot be reached.
 
-## 在 Wallpaper Engine 中使用
+## Wallpaper Engine Setup
 
-1. 先启动 `MonitorServer`。
-2. 打开 Wallpaper Engine 的壁纸编辑器。
-3. 新建 Web 类型壁纸，并选择 `Wallpaper_v3/index.html`。
-4. 保存并应用壁纸。
+1. Start `MonitorServer`.
+2. Open the Wallpaper Engine editor.
+3. Create a web wallpaper and select `Wallpaper_v3/index.html`.
+4. Save and apply the wallpaper.
 
-页面每秒从 `http://127.0.0.1:8765/stats` 获取一次数据。`Wallpaper_v1` 和 `Wallpaper_v2` 保留用于对比历史设计。
+The dashboard requests `http://127.0.0.1:8765/stats` once per second. `Wallpaper_v1` and `Wallpaper_v2` are retained as earlier design iterations.
 
-## 发布与打包
+## Build and Package
 
-只发布数据服务：
+Publish the data service by itself:
 
 ```powershell
 dotnet publish .\MonitorServer\MonitorServer.csproj `
@@ -96,9 +101,9 @@ dotnet publish .\MonitorServer\MonitorServer.csproj `
   -o .\MonitorServer\publish
 ```
 
-随后可运行仓库根目录的 `start-monitor-server.bat`。脚本使用相对路径，因此仓库移动到其他磁盘后仍可工作。
+Run `start-monitor-server.bat` from the repository root after publishing. The script uses relative paths, so the project can be moved to another folder or drive.
 
-要同时打包托盘程序与服务，可使用下面的目录布局：
+To package the tray controller and server together, use this layout:
 
 ```powershell
 dotnet publish .\MonitorServer_V2\MonitorServer_V2.csproj `
@@ -110,59 +115,67 @@ dotnet publish .\MonitorServer\MonitorServer.csproj `
   -o .\dist\MonitorServer
 ```
 
-运行 `dist/MonitorServer_V2.exe` 后，托盘程序会自动找到 `dist/MonitorServer/MonitorServer.exe`，并提供启动、停止、重启、打开日志和开机启动等操作。`dist/` 属于构建产物，不纳入 Git。
+Launch `dist/MonitorServer_V2.exe`. The tray controller automatically locates `dist/MonitorServer/MonitorServer.exe` and provides commands for starting, stopping, restarting, opening logs, and configuring launch at sign-in. The generated `dist/` directory is excluded from Git.
 
-## iCUE 水冷数据（可选）
+## Environment Configuration
 
-服务读取 iCUE 导出的传感器 CSV 日志，不会直接轮询 Corsair USB 设备。先在 iCUE 中启用传感器日志，再复制并编辑配置模板：
+Both the server and tray controller search upward from their working and executable directories for a `.env` file. Existing system environment variables take precedence over values in `.env`.
+
+Copy the safe template before making local changes:
 
 ```powershell
 Copy-Item .env.example .env
-# 编辑 .env 中的 MONITOR_ICUE_LOG_DIR
-dotnet run --project .\MonitorServer\MonitorServer.csproj
 ```
 
-程序会从当前目录和程序目录开始向上查找 `.env`。已存在的系统环境变量优先于 `.env`，因此部署脚本仍可覆盖本地配置。`.env` 不会被 Git 跟踪，只有安全的 `.env.example` 模板会进入仓库。
-
-支持的环境变量：
-
-| 变量 | 默认值 | 说明 |
+| Variable | Default | Description |
 | --- | ---: | --- |
-| `MONITOR_ENABLE_COOLER` | `true` | 设为 `false` 可关闭水冷日志读取 |
-| `MONITOR_ICUE_LOG_DIR` | 程序目录下的 `icue_logs` | iCUE CSV 日志目录 |
-| `MONITOR_COOLER_REFRESH_SECONDS` | `5` | 正常读取间隔（5–3600 秒） |
-| `MONITOR_COOLER_BACKOFF_SECONDS` | `300` | 读取失败后的退避间隔（60–3600 秒） |
-| `MONITOR_COOLER_FAN_MAX_RPM` | `2000` | 风扇转速量程（500–5000 RPM） |
-| `MONITOR_COOLER_PUMP_MAX_RPM` | `2850` | 水泵转速量程（1000–6000 RPM） |
+| `MONITOR_ENABLE_COOLER` | `true` | Set to `false` to disable cooler log processing |
+| `MONITOR_ICUE_LOG_DIR` | `icue_logs` beside the executable | Directory containing iCUE sensor CSV logs |
+| `MONITOR_COOLER_REFRESH_SECONDS` | `5` | Normal refresh interval, from 5 to 3600 seconds |
+| `MONITOR_COOLER_BACKOFF_SECONDS` | `300` | Retry interval after a failure, from 60 to 3600 seconds |
+| `MONITOR_COOLER_FAN_MAX_RPM` | `2000` | Fan speed scale, from 500 to 5000 RPM |
+| `MONITOR_COOLER_PUMP_MAX_RPM` | `2850` | Pump speed scale, from 1000 to 6000 RPM |
 
-不需要水冷信息时，可以直接设置 `MONITOR_ENABLE_COOLER=false`。主仪表盘数据不受影响。
+The real `.env` file is ignored by Git. Only `.env.example`, which contains no machine-specific paths or secrets, is committed.
 
-## 常见问题
+## Optional iCUE Cooler Telemetry
 
-### 页面一直显示 OFFLINE
+The server reads sensor CSV logs exported by iCUE instead of directly polling Corsair USB devices. Enable sensor logging in iCUE, copy `.env.example` to `.env`, and set `MONITOR_ICUE_LOG_DIR` to the log directory on your computer.
 
-确认 `MonitorServer` 正在运行，并访问 `http://127.0.0.1:8765/health`。若端口被占用，请先结束占用 `8765` 的程序。
+Disable this integration when it is not needed:
 
-### 某些温度或风扇显示 `--`
+```dotenv
+MONITOR_ENABLE_COOLER=false
+```
 
-这通常表示当前硬件或驱动没有暴露对应传感器。尝试以管理员身份运行服务，并确认 LibreHardwareMonitor 能识别该设备。
+The main dashboard sensors continue to work when cooler telemetry is disabled.
 
-### 水冷数据显示错误或过期
+## Troubleshooting
 
-确认 iCUE 正在生成 CSV 传感器日志，并检查 `MONITOR_ICUE_LOG_DIR` 是否指向正确目录。服务读取失败时会自动延长轮询间隔，避免持续占用文件。
+### The dashboard stays offline
 
-## 技术栈
+Make sure `MonitorServer` is running and open `http://127.0.0.1:8765/health`. If the request fails, check whether another application is already using port `8765`.
 
-- .NET 8 / ASP.NET Core Minimal API
+### A temperature or fan value shows `--`
+
+The device or driver may not expose that sensor. Try running the service as an administrator and confirm that LibreHardwareMonitor supports the device.
+
+### Cooler data is missing or stale
+
+Confirm that iCUE is actively writing sensor CSV logs and that `MONITOR_ICUE_LOG_DIR` points to the correct directory. The server automatically increases its polling interval after read failures to avoid repeatedly accessing an unavailable file.
+
+## Technology
+
+- .NET 8 and ASP.NET Core Minimal API
 - [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)
-- Windows Forms 托盘程序
-- 原生 HTML、CSS、JavaScript 与 Canvas
+- Windows Forms system tray application
+- Native HTML, CSS, JavaScript, and Canvas
 
-## 开发验证
+## Development Checks
 
 ```powershell
 dotnet build .\MonitorServer\MonitorServer.csproj -c Release
 dotnet build .\MonitorServer_V2\MonitorServer_V2.csproj -c Release
 ```
 
-构建目录、发布文件、运行日志、iCUE CSV 数据和本机 `.env` 均已通过 `.gitignore` 排除。
+Build outputs, published files, runtime logs, iCUE CSV data, and local `.env` files are excluded through `.gitignore`.
